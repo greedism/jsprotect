@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Advanced JavaScript Code Obfuscator</title>
+<style>
+  body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial; max-width:1200px; margin:24px auto; padding:12px; line-height:1.5; color:#111; transition:background-color 0.3s, color 0.3s; position:relative; }
+  textarea,input,button,select,label { font:inherit; font-size:14px; transition:background-color 0.3s, color 0.3s, border-color 0.3s; }
+  textarea { width:100%; min-height:200px; padding:12px; box-sizing:border-box; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size:13px; }
+  input[type="text"] { padding:8px; box-sizing:border-box; }
+  input[type="checkbox"] { margin-right:6px; }
+  .row { display:flex; gap:12px; margin:8px 0; align-items:center; flex-wrap:wrap; }
+  label { font-weight:600; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; background:#f7f7f8; padding:6px; border-radius:6px; }
+  .output { background:#fafafa; border:1px solid #eee; padding:10px; border-radius:8px; white-space:pre-wrap; word-break:break-word; }
+  .small { font-size:13px; color:#555; }
+  button { padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:white; cursor:pointer; }
+  button:disabled { opacity:0.5; cursor:not-allowed; }
+  button.primary { background:#0b74de; color:white; border-color:#0866b8; }
+  button.secondary { background:#10b981; color:white; border-color:#059669; }
+  button.tertiary { background:#f59e0b; color:white; border-color:#d97706; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .note { font-size:13px; color:#444; background:#fbfbfe; border-left:4px solid #ddd; padding:8px; border-radius:6px; margin:16px 0; }
+  .warning { background:#fef3c7; border-color:#f59e0b; color:#92400e; }
+  select { padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:white; cursor:pointer; }
+  .theme-toggle { position:absolute; top:0; right:0; padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:white; cursor:pointer; font-size:20px; }
+  .code-section { margin:16px 0; }
+  .section-title { font-weight:600; margin-bottom:8px; }
+  .copy-btn { float:right; padding:4px 8px; font-size:12px; }
+  .options-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; padding:12px; background:#f9fafb; border-radius:8px; margin:12px 0; }
+  .option-item { display:flex; align-items:center; }
+  
+  body.dark { background:#1a1a1a; color:#e5e5e5; }
+  body.dark .mono { background:#2a2a2a; color:#e5e5e5; }
+  body.dark .output { background:#252525; border-color:#3a3a3a; color:#e5e5e5; }
+  body.dark .small { color:#aaa; }
+  body.dark button { background:#2a2a2a; border-color:#3a3a3a; color:#e5e5e5; }
+  body.dark button:hover:not(:disabled) { background:#333; }
+  body.dark .note { background:#252525; border-color:#3a3a3a; color:#ccc; }
+  body.dark .warning { background:#451a03; border-color:#f59e0b; color:#fcd34d; }
+  body.dark select { background:#2a2a2a; border-color:#3a3a3a; color:#e5e5e5; }
+  body.dark input[type="text"] { background:#2a2a2a; border-color:#3a3a3a; color:#e5e5e5; }
+  body.dark textarea { background:#2a2a2a; border-color:#3a3a3a; color:#e5e5e5; }
+  body.dark .theme-toggle { background:#2a2a2a; border-color:#3a3a3a; }
+  body.dark .options-grid { background:#252525; }
+</style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">🌙</button>
+  
+  <h1>Advanced JavaScript Obfuscator</h1>
+  <p class="small">Military-grade code obfuscation with multiple protection layers.</p>
+
+  <div class="row">
+    <label for="key">Obfuscation Key</label>
+    <input type="text" id="key" class="mono" style="flex:1" placeholder="Enter a key or generate one" />
+    <button id="genKey">Generate Key</button>
+  </div>
+
+  <div class="row">
+    <label for="rounds">Rounds:</label>
+    <select id="rounds">
+      <option value="3">3</option>
+      <option value="5" selected>5</option>
+      <option value="10">10</option>
+      <option value="15">15</option>
+    </select>
+    <label for="iterations">Iterations:</label>
+    <select id="iterations">
+      <option value="50000">50,000</option>
+      <option value="100000" selected>100,000</option>
+      <option value="250000">250,000</option>
+    </select>
+  </div>
+
+  <div class="options-grid">
+    <div class="option-item">
+      <input type="checkbox" id="optDeadCode" checked />
+      <label for="optDeadCode">Inject Dead Code</label>
+    </div>
+    <div class="option-item">
+      <input type="checkbox" id="optControlFlow" checked />
+      <label for="optControlFlow">Control Flow Obfuscation</label>
+    </div>
+    <div class="option-item">
+      <input type="checkbox" id="optStringEncode" checked />
+      <label for="optStringEncode">String Encoding</label>
+    </div>
+    <div class="option-item">
+      <input type="checkbox" id="optSelfDefend" checked />
+      <label for="optSelfDefend">Self-Defending</label>
+    </div>
+    <div class="option-item">
+      <input type="checkbox" id="optAntiDebug" checked />
+      <label for="optAntiDebug">Anti-Debugging</label>
+    </div>
+    <div class="option-item">
+      <input type="checkbox" id="optDomainLock" />
+      <label for="optDomainLock">Domain Lock</label>
+    </div>
+  </div>
+
+  <div class="row" id="domainLockRow" style="display:none;">
+    <label for="allowedDomain">Allowed Domain:</label>
+    <input type="text" id="allowedDomain" placeholder="example.com" style="flex:1" />
+  </div>
+
+  <div class="code-section">
+    <div class="section-title">Original JavaScript Code</div>
+    <textarea id="sourceCode" placeholder="// Paste your JavaScript code here"></textarea>
+  </div>
+
+  <div class="row">
+    <button id="obfuscate" class="primary">Obfuscate Code</button>
+    <button id="testRun" class="secondary">Test Original</button>
+    <button id="testObfuscated" class="tertiary" disabled>Test Obfuscated</button>
+  </div>
+
+  <div class="code-section">
+    <div class="section-title">
+      Obfuscated Code
+      <button id="copyBtn" class="copy-btn" style="display:none;">Copy</button>
+    </div>
+    <textarea id="obfuscatedCode" readonly placeholder="Obfuscated code will appear here..."></textarea>
+  </div>
+
+  <div class="grid">
+    <div>
+      <strong>Stats</strong>
+      <div id="stats" class="output small mono">—</div>
+    </div>
+    <div>
+      <strong>Console Output</strong>
+      <div id="console" class="output small mono">—</div>
+    </div>
+  </div>
+
+  <div class="note warning">
+    <strong>Security Notice:</strong> This obfuscator provides strong protection but is not unbreakable. Key is still embedded in code. For maximum security, use server-side logic and never expose sensitive operations client-side.
+  </div>
+
+<script>
+(async () => {
+  async function deriveKey(password, salt, iterations = 100000) {
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({
+      name: 'PBKDF2',
+      salt: enc.encode(salt),
+      iterations: iterations,
+      hash: 'SHA-256'
+    }, keyMaterial, 512);
+    return new Uint8Array(bits);
+  }
+  
+  async function expandKey(derivedKey, context, length) {
+    const output = new Uint8Array(length);
+    let offset = 0;
+    let counter = 0;
+    while (offset < length) {
+      const input = new Uint8Array(derivedKey.length + context.length + 4);
+      input.set(derivedKey);
+      input.set(new TextEncoder().encode(context), derivedKey.length);
+      input[input.length - 4] = (counter >>> 24) & 0xff;
+      input[input.length - 3] = (counter >>> 16) & 0xff;
+      input[input.length - 2] = (counter >>> 8) & 0xff;
+      input[input.length - 1] = counter & 0xff;
+      const hash = await crypto.subtle.digest('SHA-256', input);
+      const hashBytes = new Uint8Array(hash);
+      const toCopy = Math.min(hashBytes.length, length - offset);
+      output.set(hashBytes.subarray(0, toCopy), offset);
+      offset += toCopy;
+      counter++;
+    }
+    return output;
+  }
+  
+  function shuffleArray(arr, randomBytes) {
+    const result = arr.slice();
+    let byteOffset = 0;
+    for (let i = result.length - 1; i > 0; i--) {
+      let randomValue = 0;
+      for (let b = 0; b < 4; b++) {
+        randomValue = (randomValue << 8) | randomBytes[(byteOffset + b) % randomBytes.length];
+      }
+      randomValue = randomValue >>> 0;
+      byteOffset = (byteOffset + 4) % randomBytes.length;
+      const j = randomValue % (i + 1);
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+  
+  const CHARSET = (() => {
+    const chars = [];
+    for (let i = 32; i <= 126; i++) chars.push(String.fromCharCode(i));
+    return chars;
+  })();
+  
+  async function createSubstitutionMap(derivedKey, round) {
+    const randomBytes = await expandKey(derivedKey, `sub-${round}`, 1024);
+    const shuffled = shuffleArray(CHARSET, randomBytes);
+    const forward = new Map();
+    const reverse = new Map();
+    for (let i = 0; i < CHARSET.length; i++) {
+      forward.set(CHARSET[i], shuffled[i]);
+      reverse.set(shuffled[i], CHARSET[i]);
+    }
+    return { forward, reverse };
+  }
+  
+  async function createPermutation(derivedKey, length, round) {
+    const indices = Array.from({ length }, (_, i) => i);
+    const randomBytes = await expandKey(derivedKey, `perm-${round}-${length}`, Math.max(512, length * 4));
+    return shuffleArray(indices, randomBytes);
+  }
+  
+  function applyPermutation(text, permutation) {
+    const result = new Array(text.length);
+    for (let i = 0; i < text.length; i++) result[i] = text[permutation[i]];
+    return result.join('');
+  }
+  
+  function reversePermutation(text, permutation) {
+    const result = new Array(text.length);
+    for (let i = 0; i < text.length; i++) result[permutation[i]] = text[i];
+    return result.join('');
+  }
+  
+  async function encrypt(plaintext, password, rounds = 5, iterations = 100000) {
+    if (!password) throw new Error('Password required');
+    if (!plaintext) return { ciphertext: '', stats: {} };
+    const salt = 'cipher-v2-salt-' + plaintext.length;
+    const derivedKey = await deriveKey(password, salt, iterations);
+    let text = plaintext;
+    for (let round = 0; round < rounds; round++) {
+      const { forward } = await createSubstitutionMap(derivedKey, round);
+      text = Array.from(text).map(ch => forward.get(ch) || ch).join('');
+      const permutation = await createPermutation(derivedKey, text.length, round);
+      text = applyPermutation(text, permutation);
+    }
+    return { ciphertext: text, stats: { length: text.length, rounds, iterations } };
+  }
+  
+  function generateRandomKey() {
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  }
+  
+  function generateDeadCode() {
+    const functions = [
+      `function _0x${Math.random().toString(36).substr(2,6)}(){var _0x=${Math.random()};return _0x*${Math.random()};}`,
+      `const _0x${Math.random().toString(36).substr(2,6)}=[${Array(5).fill(0).map(()=>Math.random()).join(',')}];`,
+      `var _0x${Math.random().toString(36).substr(2,6)}={a:${Math.random()},b:'${Math.random().toString(36)}',c:function(){return this.a*2;}};`,
+      `function _0x${Math.random().toString(36).substr(2,6)}(_0x){for(var _0x1=0;_0x1<_0x.length;_0x1++){if(_0x[_0x1]>${Math.random()})return true;}return false;}`,
+    ];
+    return functions[Math.floor(Math.random() * functions.length)];
+  }
+  
+  function encodeString(str) {
+    return Array.from(str).map(c => '\\x' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+  }
+  
+  function generateAntiDebug() {
+    return `(function(){var _0xstart=new Date().getTime();debugger;var _0xend=new Date().getTime();if(_0xend-_0xstart>100){while(true){debugger;}}})();`;
+  }
+  
+  function generateSelfDefend() {
+    return `(function(){var _0x=Function.prototype.toString;Function.prototype.toString=function(){if(this===_0x)return'function toString() { [native code] }';return _0x.apply(this,arguments);};})();`;
+  }
+  
+  function generateDomainLock(domain) {
+    return `if(window.location.hostname!=='${domain}'&&window.location.hostname!=='www.${domain}'){throw new Error('Domain not authorized');}`;
+  }
+  
+  function obfuscateControlFlow(code) {
+    const parts = code.split(';').filter(p => p.trim());
+    if (parts.length < 2) return code;
+    const shuffled = [];
+    const order = parts.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    return `(function(){var _0xsteps=[${order.map((idx, i) => `function(){${parts[idx]}}`).join(',')}];for(var _0xi=0;_0xi<_0xsteps.length;_0xi++){_0xsteps[_0xi]();}})();`;
+  }
+  
+  function generateAdvancedLoader(encryptedCode, key, rounds, iterations, options) {
+    let protections = '';
+    
+    if (options.antiDebug) {
+      protections += generateAntiDebug();
+    }
+    
+    if (options.selfDefend) {
+      protections += generateSelfDefend();
+    }
+    
+    if (options.domainLock && options.allowedDomain) {
+      protections += generateDomainLock(options.allowedDomain);
+    }
+    
+    let deadCodeSnippets = '';
+    if (options.deadCode) {
+      for (let i = 0; i < 5; i++) {
+        deadCodeSnippets += generateDeadCode();
+      }
+    }
+    
+    const keyEncoded = options.stringEncode ? encodeString(key) : key;
+    const codeEncoded = options.stringEncode ? encodeString(encryptedCode) : encryptedCode;
+    
+    const loaderCore = `
+async function _0xd(_0xp,_0xs,_0xi){const _0xe=new TextEncoder();const _0xk=await crypto.subtle.importKey('raw',_0xe.encode(_0xp),'PBKDF2',false,['deriveBits']);const _0xb=await crypto.subtle.deriveBits({name:'PBKDF2',salt:_0xe.encode(_0xs),iterations:_0xi,hash:'SHA-256'},_0xk,512);return new Uint8Array(_0xb)}
+async function _0xx(_0xk,_0xc,_0xl){const _0xo=new Uint8Array(_0xl);let _0xf=0,_0xn=0;while(_0xf<_0xl){const _0xi=new Uint8Array(_0xk.length+_0xc.length+4);_0xi.set(_0xk);_0xi.set(new TextEncoder().encode(_0xc),_0xk.length);_0xi[_0xi.length-4]=(_0xn>>>24)&0xff;_0xi[_0xi.length-3]=(_0xn>>>16)&0xff;_0xi[_0xi.length-2]=(_0xn>>>8)&0xff;_0xi[_0xi.length-1]=_0xn&0xff;const _0xh=await crypto.subtle.digest('SHA-256',_0xi);const _0xb=new Uint8Array(_0xh);const _0xt=Math.min(_0xb.length,_0xl-_0xf);_0xo.set(_0xb.subarray(0,_0xt),_0xf);_0xf+=_0xt;_0xn++}return _0xo}
+function _0xs(_0xa,_0xr){const _0xt=_0xa.slice();let _0xo=0;for(let _0xi=_0xt.length-1;_0xi>0;_0xi--){let _0xv=0;for(let _0xb=0;_0xb<4;_0xb++)_0xv=(_0xv<<8)|_0xr[(_0xo+_0xb)%_0xr.length];_0xv=_0xv>>>0;_0xo=(_0xo+4)%_0xr.length;const _0xj=_0xv%(_0xi+1);[_0xt[_0xi],_0xt[_0xj]]=_0xt[_0xj],_0xt[_0xi]]}return _0xt}
+const _0xC=(()=>{const _0xc=[];for(let _0xi=32;_0xi<=126;_0xi++)_0xc.push(String.fromCharCode(_0xi));return _0xc})();
+async function _0xm(_0xk,_0xr){const _0xb=await _0xx(_0xk,'sub-'+_0xr,1024);const _0xh=_0xs(_0xC,_0xb);const _0xv=new Map();for(let _0xi=0;_0xi<_0xC.length;_0xi++)_0xv.set(_0xh[_0xi],_0xC[_0xi]);return _0xv}
+async function _0xp(_0xk,_0xl,_0xr){const _0xi=Array.from({length:_0xl},(_,_0xi)=>_0xi);const _0xb=await _0xx(_0xk,'perm-'+_0xr+'-'+_0xl,Math.max(512,_0xl*4));return _0xs(_0xi,_0xb)}
+function _0xrp(_0xt,_0xp){const _0xa=new Array(_0xt.length);for(let _0xi=0;_0xi<_0xt.length;_0xi++)_0xa[_0xp[_0xi]]=_0xt[_0xi];return _0xa.join('')}
+async function _0xdec(_0xc,_0xpw,_0xn,_0xi){const _0xsalt='cipher-v2-salt-'+_0xc.length;const _0xk=await _0xd(_0xpw,_0xsalt,_0xi);let _0xt=_0xc;for(let _0xround=_0xn-1;_0xround>=0;_0xround--){const _0xperm=await _0xp(_0xk,_0xt.length,_0xround);_0xt=_0xrp(_0xt,_0xperm);const _0xrev=await _0xm(_0xk,_0xround);_0xt=Array.from(_0xt).map(_0xch=>_0xrev.get(_0xch)||_0xch).join('')}return _0xt}
+${deadCodeSnippets}
+${protections}
+(async function(){
+const _0xkey='${keyEncoded}';
+const _0xcode='${codeEncoded.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}';
+const _0xdecrypted=await _0xdec(_0xcode,_0xkey,${rounds},${iterations});
+eval(_0xdecrypted);
+})();`;
+    
+    if (options.controlFlow) {
+      return `(function(){${loaderCore}})();`;
+    }
+    
+    return loaderCore;
+  }
+  
+  const keyInput = document.getElementById('key');
+  const genKeyBtn = document.getElementById('genKey');
+  const sourceCodeArea = document.getElementById('sourceCode');
+  const obfuscatedCodeArea = document.getElementById('obfuscatedCode');
+  const obfuscateBtn = document.getElementById('obfuscate');
+  const testRunBtn = document.getElementById('testRun');
+  const testObfuscatedBtn = document.getElementById('testObfuscated');
+  const roundsSelect = document.getElementById('rounds');
+  const iterationsSelect = document.getElementById('iterations');
+  const statsDiv = document.getElementById('stats');
+  const consoleDiv = document.getElementById('console');
+  const themeToggle = document.getElementById('themeToggle');
+  const copyBtn = document.getElementById('copyBtn');
+  
+  const optDeadCode = document.getElementById('optDeadCode');
+  const optControlFlow = document.getElementById('optControlFlow');
+  const optStringEncode = document.getElementById('optStringEncode');
+  const optSelfDefend = document.getElementById('optSelfDefend');
+  const optAntiDebug = document.getElementById('optAntiDebug');
+  const optDomainLock = document.getElementById('optDomainLock');
+  const allowedDomain = document.getElementById('allowedDomain');
+  const domainLockRow = document.getElementById('domainLockRow');
+  
+  let currentObfuscatedCode = '';
+  
+  optDomainLock.addEventListener('change', () => {
+    domainLockRow.style.display = optDomainLock.checked ? 'flex' : 'none';
+  });
+  
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark');
+    themeToggle.textContent = '☀️';
+  }
+  
+  themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    const isDark = document.body.classList.contains('dark');
+    themeToggle.textContent = isDark ? '☀️' : '🌙';
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  });
+  
+  genKeyBtn.addEventListener('click', () => {
+    keyInput.value = generateRandomKey();
+  });
+  
+  function captureConsole(fn) {
+    const logs = [];
+    const oldLog = console.log;
+    const oldError = console.error;
+    const oldWarn = console.warn;
+    console.log = (...args) => logs.push(args.join(' '));
+    console.error = (...args) => logs.push('ERROR: ' + args.join(' '));
+    console.warn = (...args) => logs.push('WARN: ' + args.join(' '));
+    try {
+      fn();
+      return logs.join('\n') || '(no output)';
+    } catch (e) {
+      return 'ERROR: ' + e.message;
+    } finally {
+      console.log = oldLog;
+      console.error = oldError;
+      console.warn = oldWarn;
+    }
+  }
+  
+  obfuscateBtn.addEventListener('click', async () => {
+    try {
+      const sourceCode = sourceCodeArea.value.trim();
+      const key = keyInput.value;
+      const rounds = parseInt(roundsSelect.value);
+      const iterations = parseInt(iterationsSelect.value);
+      
+      if (!sourceCode) {
+        alert('Please enter JavaScript code to obfuscate');
+        return;
+      }
+      if (!key) {
+        alert('Please enter or generate a key');
+        return;
+      }
+      if (optDomainLock.checked && !allowedDomain.value.trim()) {
+        alert('Please enter an allowed domain for domain lock');
+        return;
+      }
+      
+      obfuscateBtn.disabled = true;
+      obfuscateBtn.textContent = 'Obfuscating...';
+      
+      const { ciphertext } = await encrypt(sourceCode, key, rounds, iterations);
+      
+      const options = {
+        deadCode: optDeadCode.checked,
+        controlFlow: optControlFlow.checked,
+        stringEncode: optStringEncode.checked,
+        selfDefend: optSelfDefend.checked,
+        antiDebug: optAntiDebug.checked,
+        domainLock: optDomainLock.checked,
+        allowedDomain: allowedDomain.value.trim()
+      };
+      
+      const loader = generateAdvancedLoader(ciphertext, key, rounds, iterations, options);
+      
+      currentObfuscatedCode = loader;
+      obfuscatedCodeArea.value = loader;
+      
+      const originalSize = new Blob([sourceCode]).size;
+      const obfuscatedSize = new Blob([loader]).size;
+      const ratio = (obfuscatedSize / originalSize * 100).toFixed(1);
+      
+      const protectionLayers = [
+        options.deadCode && 'Dead Code',
+        options.controlFlow && 'Control Flow',
+        options.stringEncode && 'String Encoding',
+        options.selfDefend && 'Self-Defending',
+        options.antiDebug && 'Anti-Debug',
+        options.domainLock && 'Domain Lock'
+      ].filter(Boolean).join(', ');
+      
+      statsDiv.textContent = `Original: ${originalSize}B | Obfuscated: ${obfuscatedSize}B | Ratio: ${ratio}%\nProtections: ${protectionLayers || 'Basic'}`;
+      
+      testObfuscatedBtn.disabled = false;
+      copyBtn.style.display = 'inline-block';
+      
+      obfuscateBtn.disabled = false;
+      obfuscateBtn.textContent = 'Obfuscate Code';
+    } catch (err) {
+      alert('Obfuscation error: ' + err.message);
+      obfuscateBtn.disabled = false;
+      obfuscateBtn.textContent = 'Obfuscate Code';
+    }
+  });
+  
+  testRunBtn.addEventListener('click', () => {
+    const sourceCode = sourceCodeArea.value.trim();
+    if (!sourceCode) {
+      alert('No code to run');
+      return;
+    }
+    const output = captureConsole(() => eval(sourceCode));
+    consoleDiv.textContent = output;
+  });
+  
+  testObfuscatedBtn.addEventListener('click', () => {
+    if (!currentObfuscatedCode) {
+      alert('No obfuscated code to test');
+      return;
+    }
+    const output = captureConsole(() => eval(currentObfuscatedCode));
+    consoleDiv.textContent = output;
+  });
+  
+  copyBtn.addEventListener('click', () => {
+    obfuscatedCodeArea.select();
+    document.execCommand('copy');
+    const oldText = copyBtn.textContent;
+    copyBtn.textContent = 'Copied!';
+    setTimeout(() => copyBtn.textContent = oldText, 2000);
+  });
+})();
+</script>
+</body>
+</html>
