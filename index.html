@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>JsProtect Obfuscator</title>
+<title>JsProtect</title>
 <style>
   body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial; max-width:1200px; margin:24px auto; padding:12px; line-height:1.5; color:#111; transition:background-color 0.3s, color 0.3s; position:relative; }
   textarea,input,button,select,label { font:inherit; font-size:14px; transition:background-color 0.3s, color 0.3s, border-color 0.3s; }
@@ -309,13 +309,13 @@
       }
     }
     
-    const keyEncoded = options.stringEncode ? encodeString(key) : key;
-    const codeEncoded = options.stringEncode ? encodeString(encryptedCode) : encryptedCode;
+    const escapedKey = key.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+    const escapedCode = encryptedCode.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r');
     
     const loaderCore = `
 async function _0xd(_0xp,_0xs,_0xi){const _0xe=new TextEncoder();const _0xk=await crypto.subtle.importKey('raw',_0xe.encode(_0xp),'PBKDF2',false,['deriveBits']);const _0xb=await crypto.subtle.deriveBits({name:'PBKDF2',salt:_0xe.encode(_0xs),iterations:_0xi,hash:'SHA-256'},_0xk,512);return new Uint8Array(_0xb)}
 async function _0xx(_0xk,_0xc,_0xl){const _0xo=new Uint8Array(_0xl);let _0xf=0,_0xn=0;while(_0xf<_0xl){const _0xi=new Uint8Array(_0xk.length+_0xc.length+4);_0xi.set(_0xk);_0xi.set(new TextEncoder().encode(_0xc),_0xk.length);_0xi[_0xi.length-4]=(_0xn>>>24)&0xff;_0xi[_0xi.length-3]=(_0xn>>>16)&0xff;_0xi[_0xi.length-2]=(_0xn>>>8)&0xff;_0xi[_0xi.length-1]=_0xn&0xff;const _0xh=await crypto.subtle.digest('SHA-256',_0xi);const _0xb=new Uint8Array(_0xh);const _0xt=Math.min(_0xb.length,_0xl-_0xf);_0xo.set(_0xb.subarray(0,_0xt),_0xf);_0xf+=_0xt;_0xn++}return _0xo}
-function _0xs(_0xa,_0xr){const _0xt=_0xa.slice();let _0xo=0;for(let _0xi=_0xt.length-1;_0xi>0;_0xi--){let _0xv=0;for(let _0xb=0;_0xb<4;_0xb++)_0xv=(_0xv<<8)|_0xr[(_0xo+_0xb)%_0xr.length];_0xv=_0xv>>>0;_0xo=(_0xo+4)%_0xr.length;const _0xj=_0xv%(_0xi+1);[_0xt[_0xi],_0xt[_0xj]]=_0xt[_0xj],_0xt[_0xi]]}return _0xt}
+function _0xs(_0xa,_0xr){const _0xt=_0xa.slice();let _0xo=0;for(let _0xi=_0xt.length-1;_0xi>0;_0xi--){let _0xv=0;for(let _0xb=0;_0xb<4;_0xb++)_0xv=(_0xv<<8)|_0xr[(_0xo+_0xb)%_0xr.length];_0xv=_0xv>>>0;_0xo=(_0xo+4)%_0xr.length;const _0xj=_0xv%(_0xi+1);[_0xt[_0xi],_0xt[_0xj]]=[_0xt[_0xj],_0xt[_0xi]]}return _0xt}
 const _0xC=(()=>{const _0xc=[];for(let _0xi=32;_0xi<=126;_0xi++)_0xc.push(String.fromCharCode(_0xi));return _0xc})();
 async function _0xm(_0xk,_0xr){const _0xb=await _0xx(_0xk,'sub-'+_0xr,1024);const _0xh=_0xs(_0xC,_0xb);const _0xv=new Map();for(let _0xi=0;_0xi<_0xC.length;_0xi++)_0xv.set(_0xh[_0xi],_0xC[_0xi]);return _0xv}
 async function _0xp(_0xk,_0xl,_0xr){const _0xi=Array.from({length:_0xl},(_,_0xi)=>_0xi);const _0xb=await _0xx(_0xk,'perm-'+_0xr+'-'+_0xl,Math.max(512,_0xl*4));return _0xs(_0xi,_0xb)}
@@ -324,15 +324,11 @@ async function _0xdec(_0xc,_0xpw,_0xn,_0xi){const _0xsalt='cipher-v2-salt-'+_0xc
 ${deadCodeSnippets}
 ${protections}
 (async function(){
-const _0xkey='${keyEncoded}';
-const _0xcode='${codeEncoded.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}';
+const _0xkey='${escapedKey}';
+const _0xcode='${escapedCode}';
 const _0xdecrypted=await _0xdec(_0xcode,_0xkey,${rounds},${iterations});
 eval(_0xdecrypted);
 })();`;
-    
-    if (options.controlFlow) {
-      return `(function(){${loaderCore}})();`;
-    }
     
     return loaderCore;
   }
@@ -388,18 +384,44 @@ eval(_0xdecrypted);
     const oldLog = console.log;
     const oldError = console.error;
     const oldWarn = console.warn;
-    console.log = (...args) => logs.push(args.join(' '));
-    console.error = (...args) => logs.push('ERROR: ' + args.join(' '));
-    console.warn = (...args) => logs.push('WARN: ' + args.join(' '));
+    
+    console.log = function(...args) {
+      logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
+      oldLog.apply(console, args);
+    };
+    console.error = function(...args) {
+      logs.push('ERROR: ' + args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
+      oldError.apply(console, args);
+    };
+    console.warn = function(...args) {
+      logs.push('WARN: ' + args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
+      oldWarn.apply(console, args);
+    };
+    
     try {
-      fn();
-      return logs.join('\n') || '(no output)';
-    } catch (e) {
-      return 'ERROR: ' + e.message;
-    } finally {
+      const result = fn();
+      if (result && typeof result.then === 'function') {
+        return result.then(() => {
+          console.log = oldLog;
+          console.error = oldError;
+          console.warn = oldWarn;
+          return logs.length > 0 ? logs.join('\n') : '(no console output)';
+        }).catch(e => {
+          console.log = oldLog;
+          console.error = oldError;
+          console.warn = oldWarn;
+          return 'ERROR: ' + e.message + '\n' + (e.stack || '');
+        });
+      }
       console.log = oldLog;
       console.error = oldError;
       console.warn = oldWarn;
+      return logs.length > 0 ? logs.join('\n') : '(no console output)';
+    } catch (e) {
+      console.log = oldLog;
+      console.error = oldError;
+      console.warn = oldWarn;
+      return 'ERROR: ' + e.message + '\n' + (e.stack || '');
     }
   }
   
@@ -476,8 +498,17 @@ eval(_0xdecrypted);
       alert('No code to run');
       return;
     }
-    const output = captureConsole(() => eval(sourceCode));
-    consoleDiv.textContent = output;
+    consoleDiv.textContent = 'Running...';
+    setTimeout(() => {
+      const output = captureConsole(() => eval(sourceCode));
+      if (output && typeof output.then === 'function') {
+        output.then(result => {
+          consoleDiv.textContent = result;
+        });
+      } else {
+        consoleDiv.textContent = output;
+      }
+    }, 10);
   });
   
   testObfuscatedBtn.addEventListener('click', () => {
@@ -485,8 +516,17 @@ eval(_0xdecrypted);
       alert('No obfuscated code to test');
       return;
     }
-    const output = captureConsole(() => eval(currentObfuscatedCode));
-    consoleDiv.textContent = output;
+    consoleDiv.textContent = 'Running...';
+    setTimeout(() => {
+      const output = captureConsole(() => eval(currentObfuscatedCode));
+      if (output && typeof output.then === 'function') {
+        output.then(result => {
+          consoleDiv.textContent = result;
+        });
+      } else {
+        consoleDiv.textContent = output;
+      }
+    }, 10);
   });
   
   copyBtn.addEventListener('click', () => {
